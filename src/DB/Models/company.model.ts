@@ -1,4 +1,5 @@
 import mongoose, { HydratedDocument, Model, Schema, Types } from "mongoose";
+import { jobModel } from "./job.model";
 
 export interface ICompany {
   name: string;
@@ -103,6 +104,16 @@ export const companySchema = new Schema<ICompany>(
   },
   { timestamps: true },
 );
+
+companySchema.post("deleteOne", async function () {
+  const { _id: companyId } = this.getFilter();
+
+  if (!companyId) return;
+
+  await jobModel.deleteMany({ companyId });
+});
+
+// companySchema.index({ HRs: 1 });
 
 export const companyModel: Model<ICompany> =
   mongoose.models.Company || mongoose.model<ICompany>("Company", companySchema);

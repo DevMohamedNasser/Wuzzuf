@@ -5,6 +5,9 @@ import {
   RoleEnum,
   UserOTPEnum,
 } from "../../Utils/enums/user.enum";
+import { applicationModel } from "./application.model";
+import { chatModel } from "./chat.model";
+import { companyModel } from "./company.model";
 
 export interface IUserOTP {
   code: string;
@@ -136,18 +139,20 @@ const userSchema = new Schema<IUser>(
         type: String,
       },
     },
-    OTP: [{
-      code: {
-        type: String,
+    OTP: [
+      {
+        code: {
+          type: String,
+        },
+        type: {
+          type: String,
+          enum: Object.values(UserOTPEnum),
+        },
+        expiresIn: {
+          type: Date,
+        },
       },
-      type: {
-        type: String,
-        enum: Object.values(UserOTPEnum),
-      },
-      expiresIn: {
-        type: Date,
-      },
-    }],
+    ],
   },
   {
     timestamps: true,
@@ -166,12 +171,24 @@ const userSchema = new Schema<IUser>(
 userSchema
   .virtual("username")
   .set(function (value: string) {
-    const [firstName, ...rest] = value.trim().split(/^\s+$/);
+    const [firstName, ...rest] = value.trim().split(/\s+/);
     this.set({ firstName, lastName: rest.join(" ") });
   })
   .get(function (this: IUser) {
     return this.firstName + " " + this.lastName;
   });
+
+userSchema.post("deleteOne", async function () {
+  const { _id: userId } = this.getFilter();
+  
+  if (!userId) return;
+
+  await applicationModel.deleteMany({ userId });
+  await chatModel.deleteMany({
+    $or: [{ senderId: userId }, { receiverId: userId }],
+  });
+  await companyModel.updateMany({ HRs: userId }, { $pull: { HRs: userId } });
+});
 
 export const userModel: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", userSchema);

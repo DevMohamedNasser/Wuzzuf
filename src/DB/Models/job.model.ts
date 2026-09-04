@@ -4,6 +4,7 @@ import {
   JobSeniorityLevelEnum,
   JobWorkingTimeEnum,
 } from "../../Utils/enums/job.enum";
+import { applicationModel } from "./application.model";
 
 export interface IJob {
   title: string;
@@ -81,6 +82,25 @@ export const jobSchema = new Schema<IJob>(
   },
   { timestamps: true },
 );
+
+// jobSchema.pre("findOneAndDelete", async function() {});
+jobSchema.post("deleteOne", async function () {
+  const filter = this.getFilter();
+  if (filter._id) {
+    await applicationModel.deleteMany({ jobId: filter._id });
+  }
+});
+
+jobSchema.pre("deleteMany", async function () {
+  const filter = this.getFilter();
+
+  const jobs = await jobModel.find(filter).select("_id");
+  const jobIds = jobs.map((job) => job._id);
+
+  if (!jobIds.length) return;
+
+  await applicationModel.deleteMany({ jobId: { $in: jobIds } });
+});
 
 export const jobModel: Model<IJob> =
   mongoose.models.Job || mongoose.model<IJob>("Job", jobSchema);
