@@ -9,8 +9,8 @@ export const generateHash = async (
 };
 
 export const compareHash = async (
-  cipherTxt: string,
   plainTxt: string,
+  cipherTxt: string,
 ): Promise<boolean> => {
   return await bcrypt.compare(plainTxt, cipherTxt);
 };

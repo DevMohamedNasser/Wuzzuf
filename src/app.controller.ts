@@ -4,9 +4,13 @@ import cors from "cors";
 import { limiter } from "./Middlewares/rateLimit.middleware";
 import corsOptions from "./Utils/cors/cors";
 import connectDB from "./DB/connection";
-import { globalErrorHandler } from "./Utils/response/error.response";
+import {
+  globalErrorHandler,
+  NotFoundException,
+} from "./Utils/response/error.response";
 import env from "./Config/config.service";
 import chalk from "chalk";
+import { authRouter, userRouter } from "./Modules";
 
 const bootstrap = async (): Promise<void> => {
   const app: Express = express();
@@ -17,6 +21,13 @@ const bootstrap = async (): Promise<void> => {
 
   app.get("/", (req: Request, res: Response) => {
     return res.status(200).json({ message: "welcome ya handasaaa" });
+  });
+
+  app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/user", userRouter);
+
+  app.use("/:dummy", () => {
+    throw new NotFoundException("Not Found Handler");
   });
 
   app.use(globalErrorHandler);

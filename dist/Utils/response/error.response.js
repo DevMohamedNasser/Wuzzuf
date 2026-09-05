@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.globalErrorHandler = exports.InternalServerErrorException = exports.TooManyRequestsException = exports.ConflictException = exports.NotFoundException = exports.ForbiddenException = exports.UnauthorizedException = exports.BadRequestException = exports.ApplicationException = void 0;
 const config_service_1 = __importDefault(require("../../Config/config.service"));
 class ApplicationException extends Error {
+    statusCode;
     constructor(message, statusCode = 400, options) {
         super(message, options);
+        this.statusCode = statusCode;
         this.name = this.constructor.name;
     }
 }
@@ -32,7 +34,7 @@ class ForbiddenException extends ApplicationException {
 exports.ForbiddenException = ForbiddenException;
 class NotFoundException extends ApplicationException {
     constructor(message, options) {
-        super(message, 403, options);
+        super(message, 404, options);
     }
 }
 exports.NotFoundException = NotFoundException;

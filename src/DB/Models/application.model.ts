@@ -27,11 +27,10 @@ export const applicationSchema = new Schema<IApplication>(
       public_id: {
         type: String,
       },
-      required: true,
     },
     status: {
       type: Number,
-      enum: Object.values(ApplicationStatusEnum),
+      enum: Object.values(ApplicationStatusEnum).filter(value => typeof(value) === "number"),
       default: ApplicationStatusEnum.Pending,
     },
   },

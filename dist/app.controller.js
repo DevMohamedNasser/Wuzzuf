@@ -12,6 +12,7 @@ const connection_1 = __importDefault(require("./DB/connection"));
 const error_response_1 = require("./Utils/response/error.response");
 const config_service_1 = __importDefault(require("./Config/config.service"));
 const chalk_1 = __importDefault(require("chalk"));
+const Modules_1 = require("./Modules");
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, helmet_1.default)(), (0, cors_1.default)(cors_2.default), rateLimit_middleware_1.limiter);
@@ -19,6 +20,11 @@ const bootstrap = async () => {
     await (0, connection_1.default)();
     app.get("/", (req, res) => {
         return res.status(200).json({ message: "welcome ya handasaaa" });
+    });
+    app.use("/api/v1/auth", Modules_1.authRouter);
+    app.use("/api/v1/user", Modules_1.userRouter);
+    app.use("/:dummy", () => {
+        throw new error_response_1.NotFoundException("Not Found Handler");
     });
     app.use(error_response_1.globalErrorHandler);
     app.listen(config_service_1.default.PORT, () => {

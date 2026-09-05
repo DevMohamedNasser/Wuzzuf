@@ -46,18 +46,18 @@ exports.jobSchema = new mongoose_1.Schema({
     },
     location: {
         type: Number,
-        enum: Object.values(job_enum_1.JobLocationEnum),
+        enum: Object.values(job_enum_1.JobLocationEnum).filter(value => typeof (value) === "number"),
         required: true,
     },
     workingTime: {
         type: Number,
-        enum: Object.values(job_enum_1.JobWorkingTimeEnum),
+        enum: Object.values(job_enum_1.JobWorkingTimeEnum).filter(value => typeof (value) === "number"),
         default: job_enum_1.JobWorkingTimeEnum.FullTime,
         required: true,
     },
     seniorityLevel: {
         type: Number,
-        enum: Object.values(job_enum_1.JobSeniorityLevelEnum),
+        enum: Object.values(job_enum_1.JobSeniorityLevelEnum).filter(value => typeof (value) === "number"),
         required: true,
     },
     description: {

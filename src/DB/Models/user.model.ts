@@ -8,6 +8,8 @@ import {
 import { applicationModel } from "./application.model";
 import { chatModel } from "./chat.model";
 import { companyModel } from "./company.model";
+import { generateHash } from "../../Utils/security/hash.security";
+import { encrypt } from "../../Utils/security/encryption.security";
 
 export interface IUserOTP {
   code: string;
@@ -16,14 +18,15 @@ export interface IUserOTP {
 }
 
 export interface IUser {
+  _id: Types.ObjectId;
   firstName: string;
   lastName: string;
-  userName?: string;
+  username?: string;
   email: string;
   password: string;
-  gender: GenderEnum;
-  DOB: Date;
-  mobileNumber: string;
+  gender?: GenderEnum;
+  DOB?: Date;
+  mobileNumber?: string;
   role: RoleEnum;
   isConfirmed: boolean;
   deletedAt: Date;
@@ -34,6 +37,8 @@ export interface IUser {
   coverPic: { secure_url: string; public_id: string };
   OTP: IUserOTP[];
   provider: ProviderEnum;
+  createdAt: Date;
+  updatedA?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -61,7 +66,7 @@ const userSchema = new Schema<IUser>(
     },
     provider: {
       type: Number,
-      enum: Object.values(ProviderEnum),
+      enum: Object.values(ProviderEnum).filter(value => typeof(value) === "number"),
       default: ProviderEnum.System,
     },
     password: {
@@ -72,12 +77,11 @@ const userSchema = new Schema<IUser>(
     },
     gender: {
       type: Number,
-      enum: Object.values(GenderEnum),
-      default: GenderEnum.Male,
+      enum: Object.values(GenderEnum).filter(value => typeof(value) === "number"),
     },
     role: {
       type: Number,
-      enum: Object.values(RoleEnum),
+      enum: Object.values(RoleEnum).filter(value => typeof(value) === "number"),
       default: RoleEnum.User,
     },
     mobileNumber: {
@@ -88,7 +92,9 @@ const userSchema = new Schema<IUser>(
     },
     DOB: {
       type: Date,
-      required: true,
+      required: function (this: IUser) {
+        return this.provider == ProviderEnum.System;
+      },
       validate: {
         validator: function (value: Date) {
           const today = new Date();
@@ -178,9 +184,16 @@ userSchema
     return this.firstName + " " + this.lastName;
   });
 
+userSchema.pre("save", async function () {
+  if (this.provider == ProviderEnum.System)
+    this.password = await generateHash(this.password);
+
+  if (this.mobileNumber) this.mobileNumber = encrypt(this.mobileNumber);
+});
+
 userSchema.post("deleteOne", async function () {
   const { _id: userId } = this.getFilter();
-  
+
   if (!userId) return;
 
   await applicationModel.deleteMany({ userId });

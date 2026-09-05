@@ -38,6 +38,17 @@ export const decodedToken = async ({
   if (!user.isConfirmed)
     throw new BadRequestException("Plz verify ur account first");
 
+  if (
+    user.changeCredentialTime &&
+    new Date(decoded.iat! * 1000) < user.changeCredentialTime
+  ) {
+    /**
+     * jwt.iat => seconds
+     * js Date => milliseconds
+     */
+    throw new BadRequestException("Token is expired after changing password");
+  }
+
   if (user.deletedAt) throw new NotFoundException("Account is deleted");
 
   if (user.bannedAt)

@@ -10,7 +10,7 @@ const generateHash = async (text, salt = config_service_1.default.SALT) => {
     return await bcrypt_1.default.hash(text, salt);
 };
 exports.generateHash = generateHash;
-const compareHash = async (cipherTxt, plainTxt) => {
+const compareHash = async (plainTxt, cipherTxt) => {
     return await bcrypt_1.default.compare(plainTxt, cipherTxt);
 };
 exports.compareHash = compareHash;

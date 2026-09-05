@@ -54,11 +54,10 @@ exports.applicationSchema = new mongoose_1.Schema({
         public_id: {
             type: String,
         },
-        required: true,
     },
     status: {
         type: Number,
-        enum: Object.values(application_enum_1.ApplicationStatusEnum),
+        enum: Object.values(application_enum_1.ApplicationStatusEnum).filter(value => typeof (value) === "number"),
         default: application_enum_1.ApplicationStatusEnum.Pending,
     },
 }, { timestamps: true });

@@ -24,6 +24,14 @@ const decodedToken = async ({ authorization, tokenType = token_enum_1.tokenTypeE
         throw new error_response_1.NotFoundException("User not found!!!");
     if (!user.isConfirmed)
         throw new error_response_1.BadRequestException("Plz verify ur account first");
+    if (user.changeCredentialTime &&
+        new Date(decoded.iat * 1000) < user.changeCredentialTime) {
+        /**
+         * jwt.iat => seconds
+         * js Date => milliseconds
+         */
+        throw new error_response_1.BadRequestException("Token is expired after changing password");
+    }
     if (user.deletedAt)
         throw new error_response_1.NotFoundException("Account is deleted");
     if (user.bannedAt)

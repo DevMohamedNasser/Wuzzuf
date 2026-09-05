@@ -30,18 +30,18 @@ export const jobSchema = new Schema<IJob>(
     },
     location: {
       type: Number,
-      enum: Object.values(JobLocationEnum),
+      enum: Object.values(JobLocationEnum).filter(value => typeof(value) === "number"),
       required: true,
     },
     workingTime: {
       type: Number,
-      enum: Object.values(JobWorkingTimeEnum),
+      enum: Object.values(JobWorkingTimeEnum).filter(value => typeof(value) === "number"),
       default: JobWorkingTimeEnum.FullTime,
       required: true,
     },
     seniorityLevel: {
       type: Number,
-      enum: Object.values(JobSeniorityLevelEnum),
+      enum: Object.values(JobSeniorityLevelEnum).filter(value => typeof(value) === "number"),
       required: true,
     },
     description: {

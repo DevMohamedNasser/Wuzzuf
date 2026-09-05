@@ -39,6 +39,8 @@ const user_enum_1 = require("../../Utils/enums/user.enum");
 const application_model_1 = require("./application.model");
 const chat_model_1 = require("./chat.model");
 const company_model_1 = require("./company.model");
+const hash_security_1 = require("../../Utils/security/hash.security");
+const encryption_security_1 = require("../../Utils/security/encryption.security");
 const userSchema = new mongoose_1.Schema({
     firstName: {
         type: String,
@@ -63,7 +65,7 @@ const userSchema = new mongoose_1.Schema({
     },
     provider: {
         type: Number,
-        enum: Object.values(user_enum_1.ProviderEnum),
+        enum: Object.values(user_enum_1.ProviderEnum).filter(value => typeof (value) === "number"),
         default: user_enum_1.ProviderEnum.System,
     },
     password: {
@@ -74,12 +76,11 @@ const userSchema = new mongoose_1.Schema({
     },
     gender: {
         type: Number,
-        enum: Object.values(user_enum_1.GenderEnum),
-        default: user_enum_1.GenderEnum.Male,
+        enum: Object.values(user_enum_1.GenderEnum).filter(value => typeof (value) === "number"),
     },
     role: {
         type: Number,
-        enum: Object.values(user_enum_1.RoleEnum),
+        enum: Object.values(user_enum_1.RoleEnum).filter(value => typeof (value) === "number"),
         default: user_enum_1.RoleEnum.User,
     },
     mobileNumber: {
@@ -90,7 +91,9 @@ const userSchema = new mongoose_1.Schema({
     },
     DOB: {
         type: Date,
-        required: true,
+        required: function () {
+            return this.provider == user_enum_1.ProviderEnum.System;
+        },
         validate: {
             validator: function (value) {
                 const today = new Date();
@@ -169,6 +172,12 @@ userSchema
 })
     .get(function () {
     return this.firstName + " " + this.lastName;
+});
+userSchema.pre("save", async function () {
+    if (this.provider == user_enum_1.ProviderEnum.System)
+        this.password = await (0, hash_security_1.generateHash)(this.password);
+    if (this.mobileNumber)
+        this.mobileNumber = (0, encryption_security_1.encrypt)(this.mobileNumber);
 });
 userSchema.post("deleteOne", async function () {
     const { _id: userId } = this.getFilter();

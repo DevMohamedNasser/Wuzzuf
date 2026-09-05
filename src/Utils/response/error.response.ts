@@ -10,7 +10,7 @@ interface IError extends Error {
 export class ApplicationException extends Error {
   constructor(
     message: string,
-    statusCode: number = 400,
+    public statusCode: number = 400,
     options?: ErrorOptions,
   ) {
     super(message, options);
@@ -38,7 +38,7 @@ export class ForbiddenException extends ApplicationException {
 
 export class NotFoundException extends ApplicationException {
   constructor(message: string, options?: ErrorOptions) {
-    super(message, 403, options);
+    super(message, 404, options);
   }
 }
 
