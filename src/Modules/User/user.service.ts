@@ -168,10 +168,6 @@ class UserService {
 
     return res.status(200).json({ message: "done" });
   };
-
-  //   login = async (req: Request, res: Response): Promise<Response> => {
-  //     return res.status(200).json({message: ""})
-  //   }
 }
 
 export default new UserService();

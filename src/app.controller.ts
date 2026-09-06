@@ -11,6 +11,7 @@ import {
 import env from "./Config/config.service";
 import chalk from "chalk";
 import { authRouter, userRouter } from "./Modules";
+import cronJob from "./Utils/cron-job/cron";
 
 const bootstrap = async (): Promise<void> => {
   const app: Express = express();
@@ -18,6 +19,7 @@ const bootstrap = async (): Promise<void> => {
   app.use(helmet(), cors(corsOptions), limiter);
   app.use(express.json());
   await connectDB();
+  await cronJob();
 
   app.get("/", (req: Request, res: Response) => {
     return res.status(200).json({ message: "welcome ya handasaaa" });

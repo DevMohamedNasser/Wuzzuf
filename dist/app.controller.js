@@ -13,11 +13,13 @@ const error_response_1 = require("./Utils/response/error.response");
 const config_service_1 = __importDefault(require("./Config/config.service"));
 const chalk_1 = __importDefault(require("chalk"));
 const Modules_1 = require("./Modules");
+const cron_1 = __importDefault(require("./Utils/cron-job/cron"));
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, helmet_1.default)(), (0, cors_1.default)(cors_2.default), rateLimit_middleware_1.limiter);
     app.use(express_1.default.json());
     await (0, connection_1.default)();
+    await (0, cron_1.default)();
     app.get("/", (req, res) => {
         return res.status(200).json({ message: "welcome ya handasaaa" });
     });
