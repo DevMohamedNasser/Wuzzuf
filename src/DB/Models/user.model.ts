@@ -9,7 +9,7 @@ import { applicationModel } from "./application.model";
 import { chatModel } from "./chat.model";
 import { companyModel } from "./company.model";
 import { generateHash } from "../../Utils/security/hash.security";
-import { encrypt } from "../../Utils/security/encryption.security";
+import { decrypt, encrypt } from "../../Utils/security/encryption.security";
 
 export interface IUserOTP {
   code: string;
@@ -66,7 +66,9 @@ const userSchema = new Schema<IUser>(
     },
     provider: {
       type: Number,
-      enum: Object.values(ProviderEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(ProviderEnum).filter(
+        (value) => typeof value === "number",
+      ),
       default: ProviderEnum.System,
     },
     password: {
@@ -77,11 +79,15 @@ const userSchema = new Schema<IUser>(
     },
     gender: {
       type: Number,
-      enum: Object.values(GenderEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(GenderEnum).filter(
+        (value) => typeof value === "number",
+      ),
     },
     role: {
       type: Number,
-      enum: Object.values(RoleEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(RoleEnum).filter(
+        (value) => typeof value === "number",
+      ),
       default: RoleEnum.User,
     },
     mobileNumber: {
@@ -168,6 +174,10 @@ const userSchema = new Schema<IUser>(
       transform(doc, ret: Record<string, unknown>) {
         delete ret.password;
         delete ret.OTP;
+        delete ret.provider;
+        delete ret.role;
+        if (ret.gender !== undefined)
+          ret.gender = GenderEnum[ret.gender as GenderEnum];
         return ret;
       },
     },
@@ -185,10 +195,15 @@ userSchema
   });
 
 userSchema.pre("save", async function () {
-  if (this.provider == ProviderEnum.System)
+  if (this.provider == ProviderEnum.System && this.isModified("password"))
     this.password = await generateHash(this.password);
 
-  if (this.mobileNumber) this.mobileNumber = encrypt(this.mobileNumber);
+  if (this.mobileNumber && this.isModified("mobileNumber"))
+    this.mobileNumber = encrypt(this.mobileNumber);
+});
+
+userSchema.post("findOne", async function (doc: IUser) {
+  if (doc.mobileNumber) doc.mobileNumber = decrypt(doc.mobileNumber);
 });
 
 userSchema.post("deleteOne", async function () {

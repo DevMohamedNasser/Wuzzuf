@@ -2,7 +2,7 @@ import * as z from "zod";
 import { GenderEnum } from "../../Utils/enums/user.enum";
 
 export const updateAccSchema = {
-  body: z.object({
+  body: z.strictObject({
     mobileNumber: z
       .string()
       .regex(/^(0|\+20|020)1[0125][\d]{8}$/, {
@@ -39,4 +39,34 @@ export const updateAccSchema = {
       .enum(Object.keys(GenderEnum).filter((key) => isNaN(Number(key))))
       .optional(),
   }),
+};
+
+export const userIdSchema = {
+  params: z.strictObject({
+    id: z.string().regex(/^[\w]{24}$/, { error: "Invalid id format" }),
+  }),
+};
+
+export const updatePasswordSchema = {
+  body: z
+    .object({
+      oldPassword: z
+        .string({ error: "oldPassword is required" })
+        .min(6, { error: "password must be at least 6 chars" }),
+      newPassword: z
+        .string({ error: "newPassword is required" })
+        .min(6, { error: "password must be at least 6 chars" }),
+      confirmPassword: z
+        .string({ error: "confirmPassword is required" })
+        .min(6, { error: "password must be at least 6 chars" }),
+    })
+    .superRefine((data, ctx) => {
+      if (data.newPassword !== data.confirmPassword) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["confirmPassword"],
+          message: "Password mismatch",
+        });
+      }
+    }),
 };

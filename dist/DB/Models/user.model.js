@@ -65,7 +65,7 @@ const userSchema = new mongoose_1.Schema({
     },
     provider: {
         type: Number,
-        enum: Object.values(user_enum_1.ProviderEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(user_enum_1.ProviderEnum).filter((value) => typeof value === "number"),
         default: user_enum_1.ProviderEnum.System,
     },
     password: {
@@ -76,11 +76,11 @@ const userSchema = new mongoose_1.Schema({
     },
     gender: {
         type: Number,
-        enum: Object.values(user_enum_1.GenderEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(user_enum_1.GenderEnum).filter((value) => typeof value === "number"),
     },
     role: {
         type: Number,
-        enum: Object.values(user_enum_1.RoleEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(user_enum_1.RoleEnum).filter((value) => typeof value === "number"),
         default: user_enum_1.RoleEnum.User,
     },
     mobileNumber: {
@@ -160,6 +160,10 @@ const userSchema = new mongoose_1.Schema({
         transform(doc, ret) {
             delete ret.password;
             delete ret.OTP;
+            delete ret.provider;
+            delete ret.role;
+            if (ret.gender !== undefined)
+                ret.gender = user_enum_1.GenderEnum[ret.gender];
             return ret;
         },
     },
@@ -174,10 +178,14 @@ userSchema
     return this.firstName + " " + this.lastName;
 });
 userSchema.pre("save", async function () {
-    if (this.provider == user_enum_1.ProviderEnum.System)
+    if (this.provider == user_enum_1.ProviderEnum.System && this.isModified("password"))
         this.password = await (0, hash_security_1.generateHash)(this.password);
-    if (this.mobileNumber)
+    if (this.mobileNumber && this.isModified("mobileNumber"))
         this.mobileNumber = (0, encryption_security_1.encrypt)(this.mobileNumber);
+});
+userSchema.post("findOne", async function (doc) {
+    if (doc.mobileNumber)
+        doc.mobileNumber = (0, encryption_security_1.decrypt)(doc.mobileNumber);
 });
 userSchema.post("deleteOne", async function () {
     const { _id: userId } = this.getFilter();

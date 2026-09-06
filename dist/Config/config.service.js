@@ -37,5 +37,9 @@ const env = {
     EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
     // Google OAuth
     CLIENT_ID: process.env.CLIENT_ID,
+    // Cloudinary
+    CLOUD_NAME: process.env.CLOUD_NAME,
+    API_KEY: process.env.API_KEY,
+    API_SECRET: process.env.API_SECRET,
 };
 exports.default = env;
