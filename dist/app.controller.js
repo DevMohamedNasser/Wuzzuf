@@ -14,6 +14,8 @@ const config_service_1 = __importDefault(require("./Config/config.service"));
 const chalk_1 = __importDefault(require("chalk"));
 const Modules_1 = require("./Modules");
 const cron_1 = __importDefault(require("./Utils/cron-job/cron"));
+// import { jobModel } from "./DB/Models/job.model";
+// import { JobLocationEnum, JobSeniorityLevelEnum, JobWorkingTimeEnum } from "./Utils/enums/job.enum";
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, helmet_1.default)(), (0, cors_1.default)(cors_2.default), rateLimit_middleware_1.limiter);
@@ -25,6 +27,18 @@ const bootstrap = async () => {
     });
     app.use("/api/v1/auth", Modules_1.authRouter);
     app.use("/api/v1/user", Modules_1.userRouter);
+    app.use("/api/v1/company", Modules_1.companyRouter);
+    // await jobModel.create({
+    //   companyId: "6a9df594da874c05bcb0835e",
+    //   addedBy: "6a9b264c12d8a4167a456bfc",
+    //   title: "Full-stack Developer",
+    //   location: JobLocationEnum.Onsite,
+    //   workingTime: JobWorkingTimeEnum.FullTime,
+    //   seniorityLevel: JobSeniorityLevelEnum.Junior,
+    //   technicalSkills: ["Front-end", "Back-end"],
+    //   softSkills: ["Collaboration"],
+    //   description: "as description"
+    // })
     app.use("/:dummy", () => {
         throw new error_response_1.NotFoundException("Not Found Handler");
     });

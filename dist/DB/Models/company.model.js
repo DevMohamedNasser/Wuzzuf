@@ -40,7 +40,6 @@ exports.companySchema = new mongoose_1.Schema({
     name: {
         type: String,
         trim: true,
-        minLength: 2,
         unique: true,
         required: true,
     },
@@ -118,7 +117,16 @@ exports.companySchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+});
+exports.companySchema.virtual("jobs", {
+    ref: "Job",
+    localField: "_id",
+    foreignField: "companyId",
+});
 exports.companySchema.post("deleteOne", async function () {
     const { _id: companyId } = this.getFilter();
     if (!companyId)

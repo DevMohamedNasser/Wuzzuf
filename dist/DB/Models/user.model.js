@@ -184,8 +184,9 @@ userSchema.pre("save", async function () {
         this.mobileNumber = (0, encryption_security_1.encrypt)(this.mobileNumber);
 });
 userSchema.post("findOne", async function (doc) {
-    if (doc.mobileNumber)
-        doc.mobileNumber = (0, encryption_security_1.decrypt)(doc.mobileNumber);
+    if (!doc?.mobileNumber)
+        return;
+    doc.mobileNumber = (0, encryption_security_1.decrypt)(doc.mobileNumber);
 });
 userSchema.post("deleteOne", async function () {
     const { _id: userId } = this.getFilter();

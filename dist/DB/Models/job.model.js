@@ -84,7 +84,6 @@ exports.jobSchema = new mongoose_1.Schema({
     updatedBy: {
         type: mongoose_1.Types.ObjectId,
         ref: "User",
-        required: true,
     },
     closed: {
         type: Boolean,
@@ -110,5 +109,12 @@ exports.jobSchema.pre("deleteMany", async function () {
     if (!jobIds.length)
         return;
     await application_model_1.applicationModel.deleteMany({ jobId: { $in: jobIds } });
+});
+exports.jobSchema.post("find", function (docs) {
+    docs.forEach((job) => {
+        job.location = job_enum_1.JobLocationEnum[job.location];
+        job.workingTime = job_enum_1.JobWorkingTimeEnum[job.workingTime];
+        job.seniorityLevel = job_enum_1.JobSeniorityLevelEnum[job.seniorityLevel];
+    });
 });
 exports.jobModel = mongoose_1.default.models.Job || mongoose_1.default.model("Job", exports.jobSchema);

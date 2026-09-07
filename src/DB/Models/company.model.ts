@@ -9,8 +9,8 @@ export interface ICompany {
   address?: string;
   numberOfEmployees: { min: number; max: number };
   createdBy: Types.ObjectId;
-  logo: { secure_url: string; public_id: string };
-  coverPic: { secure_url: string; public_id: string };
+  logo?: { secure_url: string; public_id: string };
+  coverPic?: { secure_url: string; public_id: string };
   HRs: Types.ObjectId[];
   bannedAt: Date;
   deletedAt: Date;
@@ -23,7 +23,6 @@ export const companySchema = new Schema<ICompany>(
     name: {
       type: String,
       trim: true,
-      minLength: 2,
       unique: true,
       required: true,
     },
@@ -102,8 +101,18 @@ export const companySchema = new Schema<ICompany>(
       default: false,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
 );
+
+companySchema.virtual("jobs", {
+  ref: "Job",
+  localField: "_id",
+  foreignField: "companyId",
+});
 
 companySchema.post("deleteOne", async function () {
   const { _id: companyId } = this.getFilter();
@@ -112,8 +121,6 @@ companySchema.post("deleteOne", async function () {
 
   await jobModel.deleteMany({ companyId });
 });
-
-// companySchema.index({ HRs: 1 });
 
 export const companyModel: Model<ICompany> =
   mongoose.models.Company || mongoose.model<ICompany>("Company", companySchema);

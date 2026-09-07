@@ -68,7 +68,6 @@ export const jobSchema = new Schema<IJob>(
     updatedBy: {
       type: Types.ObjectId,
       ref: "User",
-      required: true,
     },
     closed: {
       type: Boolean,
@@ -100,6 +99,14 @@ jobSchema.pre("deleteMany", async function () {
   if (!jobIds.length) return;
 
   await applicationModel.deleteMany({ jobId: { $in: jobIds } });
+});
+
+jobSchema.post("find", function (docs: IJob[]) {
+  docs.forEach((job) => {
+    job.location = JobLocationEnum[job.location] as any;
+    job.workingTime = JobWorkingTimeEnum[job.workingTime] as any;
+    job.seniorityLevel = JobSeniorityLevelEnum[job.seniorityLevel] as any;
+  });
 });
 
 export const jobModel: Model<IJob> =

@@ -203,7 +203,9 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.post("findOne", async function (doc: IUser) {
-  if (doc.mobileNumber) doc.mobileNumber = decrypt(doc.mobileNumber);
+  if (!doc?.mobileNumber) return;
+
+  doc.mobileNumber = decrypt(doc.mobileNumber);
 });
 
 userSchema.post("deleteOne", async function () {
