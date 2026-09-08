@@ -27,12 +27,10 @@ export const chatSchema = new Schema<IChat>(
       {
         message: {
           type: String,
-          required: true,
         },
         senderId: {
           type: Types.ObjectId,
           ref: "User",
-          required: true,
         },
       },
     ],

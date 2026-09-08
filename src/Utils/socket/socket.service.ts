@@ -4,6 +4,7 @@ import { HUserDocument } from "../../DB/Models/user.model";
 import { decodedToken } from "../../Middlewares/authentication.middleware";
 import { tokenTypeEnum } from "../enums/token.enum";
 import chalk from "chalk";
+import { registerChatEvents } from "./chat.socket";
 
 export interface authedSocket extends Socket {
   user?: HUserDocument;
@@ -20,7 +21,8 @@ const initializeSocket = (httpServer: httpServer) => {
   //   socket middleware
   io.use(async (socket: authedSocket, next) => {
     try {
-      const authorization = socket.handshake.auth.token;
+      const authorization = socket.handshake.headers.authorization;
+      // const authorization = socket.handshake.auth.token;
 
       const { user } = await decodedToken({
         authorization,
@@ -43,6 +45,7 @@ const initializeSocket = (httpServer: httpServer) => {
     const userId = user._id.toString();
 
     socket.join(userId); // join user in room
+    registerChatEvents(io!, socket);
   });
 
   console.log(chalk.green(`[socket] connected successfully`));

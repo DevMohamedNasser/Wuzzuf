@@ -33,29 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.chatModel = exports.chatSchema = void 0;
-const mongoose_1 = __importStar(require("mongoose"));
-exports.chatSchema = new mongoose_1.Schema({
-    senderId: {
-        type: mongoose_1.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    receiverId: {
-        type: mongoose_1.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    messages: [
-        {
-            message: {
-                type: String,
-            },
-            senderId: {
-                type: mongoose_1.Types.ObjectId,
-                ref: "User",
-            },
-        },
-    ],
-}, { timestamps: true });
-exports.chatModel = mongoose_1.default.models.Chat || mongoose_1.default.model("Chat", exports.chatSchema);
+exports.getChatHistorySchema = exports.sendMessageSchema = void 0;
+const z = __importStar(require("zod"));
+exports.sendMessageSchema = z.object({
+    to: z.string().regex(/^\w{24}$/, { error: `Invalid id format` }),
+    jobId: z.string().regex(/^\w{24}$/, { error: `Invalid id format` }),
+    message: z.string().min(1).trim().max(10000),
+});
+exports.getChatHistorySchema = z.object({
+    partner: z.string().regex(/^\w{24}$/, { error: `Invalid id format` }),
+});

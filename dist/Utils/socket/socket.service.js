@@ -8,6 +8,7 @@ const socket_io_1 = require("socket.io");
 const authentication_middleware_1 = require("../../Middlewares/authentication.middleware");
 const token_enum_1 = require("../enums/token.enum");
 const chalk_1 = __importDefault(require("chalk"));
+const chat_socket_1 = require("./chat.socket");
 let io = null;
 const getIo = () => io;
 exports.getIo = getIo;
@@ -18,7 +19,8 @@ const initializeSocket = (httpServer) => {
     //   socket middleware
     io.use(async (socket, next) => {
         try {
-            const authorization = socket.handshake.auth.token;
+            const authorization = socket.handshake.headers.authorization;
+            // const authorization = socket.handshake.auth.token;
             const { user } = await (0, authentication_middleware_1.decodedToken)({
                 authorization,
                 tokenType: token_enum_1.tokenTypeEnum.Access,
@@ -34,6 +36,7 @@ const initializeSocket = (httpServer) => {
         const user = socket.user;
         const userId = user._id.toString();
         socket.join(userId); // join user in room
+        (0, chat_socket_1.registerChatEvents)(io, socket);
     });
     console.log(chalk_1.default.green(`[socket] connected successfully`));
     return io;
