@@ -46,11 +46,6 @@ exports.updateJobSchema = {
         closed: zod_1.z.coerce.boolean().optional(),
     }),
 };
-/**
- * 5. Get all Jobs that match the following filters and if no filters apply then get all jobs
-    - use pagination (skip , limit , sort (ex. by createdAt) and total count )
-    - allow user to filter with workingTime , jobLocation , seniorityLevel and jobTitle,technicalSkills
- */
 exports.JobsFilterSchema = {
     query: zod_1.z.object({
         page: zod_1.z.coerce.number().int().positive().optional(),
@@ -84,18 +79,6 @@ exports.appStatusSchema = {
         acceptance: zod_1.z.coerce.boolean(),
     }),
 };
-// export const companyJobsSchema = {
-//   params: z.object({
-//     companyId: z.string().min(1),
-//     jobId: z.string().optional(),
-//   }),
-//   query: z.object({
-//     page: z.coerce.number().int().positive().optional(),
-//     limit: z.coerce.number().int().positive().max(50).optional(),
-//     sortBy: z.enum(["createdAt"]).optional(),
-//     sortOrder: z.enum(["asc", "desc"]).optional(),
-//   }),
-// };
 exports.companyJobSchema = {
     params: zod_1.z.object({
         companySrch: zod_1.z.string().min(1),

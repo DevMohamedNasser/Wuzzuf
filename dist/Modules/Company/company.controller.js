@@ -69,13 +69,6 @@ router.patch("/:id/coverPic", (0, validation_middleware_1.validation)(validators
 }).single("attachment"), company_service_1.default.uploadCoverPic);
 router.delete("/:id/logo", (0, validation_middleware_1.validation)(validators.companyIdSchema), company_service_1.default.deleteLogo);
 router.delete("/:id/coverPic", (0, validation_middleware_1.validation)(validators.companyIdSchema), company_service_1.default.deleteCoverPic);
-// const companyJobRouter = Router({ mergeParams: true });
-// companyJobRouter.get(
-//   "{/:jobId}",
-//   validation(jobValidators.companyJobsSchema),
-//   jobService.getCompanyJobs,
-// );
-// router.use("/:companyId/job", companyJobRouter);
 // merge params
 const companyJobRouter = (0, express_1.Router)({ mergeParams: true });
 // merge params child

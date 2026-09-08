@@ -59,12 +59,6 @@ export const updateJobSchema = {
   }),
 };
 
-/**
- * 5. Get all Jobs that match the following filters and if no filters apply then get all jobs
-    - use pagination (skip , limit , sort (ex. by createdAt) and total count )
-    - allow user to filter with workingTime , jobLocation , seniorityLevel and jobTitle,technicalSkills
- */
-
 export const JobsFilterSchema = {
   query: z.object({
     page: z.coerce.number().int().positive().optional(),

@@ -1,9 +1,15 @@
 import { Router } from "express";
-import { authentication } from "../../Middlewares/authentication.middleware";
+import {
+  authentication,
+  authorization,
+} from "../../Middlewares/authentication.middleware";
 import { tokenTypeEnum } from "../../Utils/enums/token.enum";
 import * as validators from "./job.validation";
 import jobService from "./job.service";
 import { validation } from "../../Middlewares/validation.middleware";
+import { localFileMulter } from "../../Utils/multer/local.multer";
+import { fileValidation } from "../../Utils/multer/fileTypes.validation.multer";
+import { RoleEnum } from "../../Utils/enums/user.enum";
 
 const router = Router({ mergeParams: true });
 router.use(authentication({ tokenType: tokenTypeEnum.Access }));
@@ -38,6 +44,18 @@ router.patch(
   validation(validators.ApplicationIdSchema),
   validation(validators.appStatusSchema),
   jobService.acceptOrRejectApplicant,
+);
+
+router.post(
+  "/apply/:id",
+  validation(validators.jobIdSchema),
+  authorization({ accessRoles: [RoleEnum.User] }),
+  localFileMulter({
+    customPath: "Application CVs",
+    validation: [...fileValidation.images, ...fileValidation.documents],
+    maxSizeMB: 5,
+  }).single("attachment"),
+  jobService.applyJob,
 );
 
 export default router;

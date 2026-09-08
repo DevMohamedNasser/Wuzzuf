@@ -12,6 +12,7 @@ import {
 } from "./job.dto";
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
@@ -28,7 +29,8 @@ import { ApplicationStatusEnum } from "../../Utils/enums/application.enum";
 import emailEvent from "../../Utils/events/email.event";
 import { userModel } from "../../DB/Models/user.model";
 import mongoose from "mongoose";
-// import mongoose from "mongoose";
+import cloudinary from "../../Utils/multer/cloudinary.multer";
+import { socketNotifyHRsApplication } from "../../Utils/socket/application.socket";
 
 class JobService {
   constructor() {}
@@ -367,9 +369,39 @@ class JobService {
     });
   };
 
-  // addJob = async (req: Request, res: Response): Promise<Response> => {
-  //     return res.status(200).json({message: ""})
-  // }
+  applyJob = async (req: Request, res: Response): Promise<Response> => {
+    const { id }: IJobIdDTO = req.params as { id: string };
+    const file = req.file;
+
+    if (!file) throw new NotFoundException("Upload ur CV");
+
+    const job = await jobModel.findById(id);
+    if (!job) throw new NotFoundException("Job not found");
+
+    if (job.closed)
+      throw new BadRequestException("Job applications are completed");
+
+    const company = await companyModel.findById(job.companyId);
+    if (!company || company.bannedAt || company.deletedAt)
+      throw new NotFoundException("Company not found");
+
+    const isApplied = await applicationModel.findOne({ userId: req.user!._id });
+    if (isApplied) throw new ConflictException("U are already applied");
+
+    const { public_id, secure_url } = await cloudinary.uploader.upload(
+      file.path,
+    );
+
+    await applicationModel.create({
+      jobId: id,
+      userId: req.user!._id,
+      userCV: { public_id, secure_url },
+    });
+
+    socketNotifyHRsApplication(company, req.user!, job);
+
+    return res.status(200).json({ message: "Submitted successfully" });
+  };
 }
 
 export default new JobService();

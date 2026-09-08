@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Tester — Socket.IO</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --border: #334155;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #3b82f6;
+        --ok: #22c55e;
+        --err: #ef4444;
+        --mine: #2563eb;
+        --theirs: #334155;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---------- top bar: login ---------- */
+      .topbar {
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        padding: 10px 14px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .topbar input {
+        padding: 8px 10px;
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 13px;
+      }
+      .topbar input.email {
+        width: 190px;
+      }
+      .topbar input.pass {
+        width: 140px;
+      }
+      button {
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.1);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.grey {
+        background: #475569;
+      }
+      button.admin {
+        background: #9333ea;
+      }
+      .status {
+        margin-left: auto;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--err);
+        display: inline-block;
+      }
+      .dot.on {
+        background: var(--ok);
+      }
+
+      /* ---------- main layout ---------- */
+      .main {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+      }
+
+      /* friends */
+      .side {
+        width: 250px;
+        background: var(--card);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+      .side h3 {
+        margin: 0;
+        padding: 12px 14px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+      }
+      .friends {
+        flex: 1;
+        overflow-y: auto;
+      }
+      .friend {
+        padding: 11px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #27354a;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 14px;
+      }
+      .friend:hover {
+        background: #27354a;
+      }
+      .friend.active {
+        background: #1d4ed8;
+      }
+      .friend .badge {
+        margin-left: auto;
+        background: var(--err);
+        color: #fff;
+        font-size: 11px;
+        padding: 1px 6px;
+        border-radius: 10px;
+      }
+      .empty {
+        padding: 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      /* ================= CHAT ================= */
+      .chat {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .chat-head {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--card);
+        font-size: 14px;
+      }
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .msg {
+        max-width: 68%;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.45;
+        word-wrap: break-word;
+      }
+      .msg.mine {
+        background: var(--mine);
+        align-self: flex-end;
+      }
+      .msg.theirs {
+        background: var(--theirs);
+        align-self: flex-start;
+      }
+      .msg .meta {
+        font-size: 10px;
+        opacity: 0.75;
+        margin-top: 3px;
+        text-align: right;
+      }
+      .composer {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid var(--border);
+        background: var(--card);
+      }
+      .composer input {
+        flex: 1;
+        padding: 10px 12px;
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      /* log */
+      .log-wrap {
+        width: 300px;
+        background: #0b1220;
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+      .log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 11px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .log div {
+        margin-bottom: 3px;
+      }
+      .ok {
+        color: var(--ok);
+      }
+      .err {
+        color: var(--err);
+      }
+      .muted {
+        color: var(--muted);
+      }
+
+      /* ---------- beautiful alert for newApplication ---------- */
+      #appAlertOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        backdrop-filter: blur(2px);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        z-index: 9999;
+        padding-top: 60px;
+      }
+      #appAlertOverlay.show {
+        display: flex;
+      }
+      .app-alert {
+        background: linear-gradient(145deg, #1e293b, #111827);
+        border: 1px solid #3b4a63;
+        border-radius: 14px;
+        padding: 20px 22px;
+        width: 340px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+        animation: alertPop 0.35s ease;
+        color: var(--text);
+      }
+      @keyframes alertPop {
+        from {
+          opacity: 0;
+          transform: translateY(-18px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .app-alert .icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+      .app-alert h4 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .app-alert p {
+        margin: 0 0 14px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .app-alert button {
+        width: 100%;
+        background: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ================= TOP BAR ================= -->
+    <div class="topbar">
+      <input class="email" id="email" placeholder="email" />
+      <input
+        class="pass"
+        id="password"
+        type="password"
+        placeholder="password"
+      />
+      <button id="btnLogin">Login & Connect</button>
+      <button id="btnLoginAdmin" class="admin">Login as Admin</button>
+      <button id="btnDisconnect" class="grey" disabled>Disconnect</button>
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">not connected</span>
+      </div>
+    </div>
+
+    <!-- ================= MAIN ================= -->
+    <div class="main">
+      <!-- FRIENDS -->
+      <div class="side">
+        <h3>Friends</h3>
+        <div class="friends" id="friends">
+          <div class="empty">Login first…</div>
+        </div>
+      </div>
+
+      <!-- chat -->
+      <div class="chat">
+        <div class="chat-head">
+          <div id="chatName">Select a friend</div>
+        </div>
+        <div class="messages" id="messages"></div>
+        <div class="composer">
+          <input id="input" placeholder="Write a message…" disabled />
+          <button id="btnSend" disabled>Send</button>
+        </div>
+      </div>
+
+      <!-- log -->
+      <div class="log-wrap">
+        <h3
+          style="
+            margin: 0;
+            padding: 12px 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+          "
+        >
+          Socket events
+        </h3>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <!-- ================= NEW APPLICATION ALERT ================= -->
+    <div id="appAlertOverlay">
+      <div class="app-alert">
+        <div class="icon">🎉</div>
+        <h4 id="appAlertTitle">New Application</h4>
+        <p id="appAlertMessage">A new application has arrived.</p>
+        <button id="appAlertClose">Got it</button>
+      </div>
+    </div>
+
+    <!-- the Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script type="module">
+      // ============================================================
+      //  SMALL HELPERS
+      // ============================================================
+      const $ = (id) => document.getElementById(id);
+      const logEl = $("log");
+
+      const log = (msg, cls = "") => {
+        const time = new Date().toLocaleTimeString();
+        logEl.insertAdjacentHTML(
+          "afterbegin",
+          `<div class="${cls}">[${time}] ${msg}</div>`,
+        );
+      };
+
+      // ============================================================
+      //  STATE (the memory of this page)
+      // ============================================================
+      let socket = null;
+      let token = "";
+      let me = null;
+      let friends = [];
+      let activeFriend = null;
+      let unread = {};
+      // USER or ADMIN
+      let role = "USER";
+      // remember email
+      $("email").value = localStorage.getItem("chatEmail") || "";
+
+      // ============================================================
+      //  1) LOGIN  -> get the access token from the REST API
+      // ============================================================
+      const login = async (isAdmin = false) => {
+        const email = $("email").value.trim();
+        const password = $("password").value;
+
+        if (!email || !password) {
+          return log("email and password are required", "err");
+        }
+
+        try {
+          role = isAdmin ? "ADMIN" : "USER";
+          const isAdminValue = isAdmin ? 1 : 0;
+          log(isAdmin ? "logging in as ADMIN…" : "logging in as USER…");
+          // REST login
+          const response = await fetch(
+            `http://127.0.0.1:3000/api/v1/auth/login?isAdmin=${isAdminValue}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email,
+                password,
+              }),
+            },
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            return log(`login failed: ${result.message}`, "err");
+          }
+          token = result.data.tokens.accessToken;
+          localStorage.setItem("chatEmail", email);
+          log(`login ok — role: ${role}`, "ok");
+        //   await loadProfile();
+          connectSocket();
+        } catch (error) {
+          log(`login error: ${error.message}`, "err");
+        }
+      };
+
+      // normal user login
+      $("btnLogin").onclick = () => {
+        login(false);
+      };
+
+      // admin login
+      $("btnLoginAdmin").onclick = () => {
+        login(true);
+      };
+
+      // ============================================================
+      // PROFILE
+      // ============================================================
+      const loadProfile = async () => {
+        try {
+          const response = await fetch(
+            "http://127.0.0.1:3000/api/v1/user/profile",
+            {
+              headers: {
+                Authorization: `${role} ${token}`,
+              },
+            },
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            log(`loadProfile failed: ${result.message}`, "err");
+            throw new Error(result.message || "Failed to load profile");
+          }
+          me = result.data.user;
+          friends = me.friends || [];
+          log(`I am ${me.firstName} — ${friends.length} friend(s)`, "ok");
+          renderFriends();
+        } catch (error) {
+          log(`loadProfile error: ${error.message}`, "err");
+          throw error;
+        }
+      };
+
+      
+      // ============================================================
+      //  CONNECT THE SOCKET
+      // ============================================================
+      const connectSocket = () => {
+        // close old socket if exists
+        if (socket) {
+          socket.disconnect();
+        }
+        socket = io("http://127.0.0.1:3000", {
+          auth: {
+            token: `${role} ${token}`,
+          },
+        });
+
+        socket.on("connect", () => {
+          setStatus(true, `connected (${socket.id})`);
+          log(`socket connected as ${role}`, "ok");
+          $("btnDisconnect").disabled = false;
+        });
+
+        socket.on("connect_error", (error) => {
+          setStatus(false, "refused");
+          log(`connect_error: ${error.message}`, "err");
+        });
+
+        socket.on("disconnect", (reason) => {
+          setStatus(false, "disconnected");
+          log(`socket disconnected: ${reason}`, "muted");
+          $("btnDisconnect").disabled = true;
+        });
+
+        // ========================================================
+        // NEW MESSAGE
+        // ========================================================
+        socket.on("newMessage", (message) => {
+          const from = message.sender._id;
+          log(`📩 newMessage from ${message.sender.firstName}`, "ok");
+          if (activeFriend && activeFriend._id === from) {
+            addBubble(message, false);
+            socket.emit("markAsRead", { from });
+          } else {
+            unread[from] = (unread[from] || 0) + 1;
+            renderFriends();
+          }
+        });
+
+        // ========================================================
+        // MESSAGE SENT
+        // ========================================================
+        socket.on("messageSent", (message) => {
+          log(`📤 messageSent (delivered: ${message.delivered})`, "ok");
+
+          if (activeFriend && activeFriend._id === message.receiverId) {
+            addBubble(message, true);
+          }
+        });
+
+        // ========================================================
+        // SOCKET ERROR
+        // ========================================================
+        socket.on("socketError", (data) => {
+          log(`❌ ${data.event}: ${data.error}`, "err");
+        });
+
+        // ========================================================
+        // MESSAGES READ
+        // ========================================================
+        socket.on("messageRead", (data) => {
+          log(`✓✓ messagesRead by ${data.by.slice(-6)} (${data.count})`, "ok");
+          document.querySelectorAll(".msg.mine .meta").forEach((meta) => {
+            meta.textContent = meta.textContent.replace("✓", "✓✓");
+          });
+        });
+
+        // ========================================================
+        // NEW APPLICATION -> beautiful alert
+        // ========================================================
+        socket.on("newApplication", (data) => {
+          log(`📥 newApplication received`, "ok");
+          showAppAlert(data);
+        });
+      };
+      // ============================================================
+      // DISCONNECT
+      // ============================================================
+      $("btnDisconnect").onclick = () => {
+        socket?.disconnect();
+
+        $("btnDisconnect").disabled = true;
+      };
+      // ============================================================
+      // STATUS
+      // ============================================================
+      const setStatus = (on, text) => {
+        $("statusDot").className = on ? "dot on" : "dot";
+        $("statusText").textContent = text;
+      };
+      // ============================================================
+      // FRIENDS
+      // ============================================================
+      const renderFriends = () => {
+        if (!friends.length) {
+          $("friends").innerHTML = `
+              <div class="empty">
+                No friends yet.
+                <br><br>
+                Add a friend first.
+              </div>
+            `;
+          return;
+        }
+        $("friends").innerHTML = friends
+          .map((friend) => {
+            const isActive = activeFriend && activeFriend._id === friend._id;
+            const count = unread[friend._id];
+            return `
+              <div
+                class="friend ${isActive ? "active" : ""}"
+                data-id="${friend._id}"
+              >
+                <span>
+                  ${friend.firstName}
+                  ${friend.lastName}
+                </span>
+                ${count ? `<span class="badge">${count}</span>` : ""}
+              </div>
+            `;
+          })
+          .join("");
+
+        document.querySelectorAll(".friend").forEach((element) => {
+          element.onclick = () => openChat(element.dataset.id);
+        });
+      };
+
+      // ============================================================
+      // OPEN CHAT
+      // ============================================================
+      const openChat = async (friendId) => {
+        activeFriend = friends.find((friend) => friend._id === friendId);
+        if (!activeFriend) return;
+
+        delete unread[friendId];
+        renderFriends();
+
+        $("chatName").textContent =
+          `${activeFriend.firstName} ${activeFriend.lastName}`;
+        $("input").disabled = false;
+        $("btnSend").disabled = false;
+        $("messages").innerHTML = "";
+
+        // REST = old messages
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:3000/api/v1/chat/${friendId}?page=1&limit=50`,
+            {
+              headers: {
+                Authorization: `${role} ${token}`,
+              },
+            },
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            return log(`failed to load messages: ${result.message}`, "err");
+          }
+          log(`loaded ${result.data.messages.length} old message(s)`, "ok");
+          result.data.messages.reverse().forEach((message) => {
+            const senderId = message.senderId?._id || message.senderId;
+            addBubble(
+              {
+                content: message.content,
+                createdAt: message.createdAt,
+                readAt: message.readAt,
+              },
+              senderId === me._id,
+            );
+          });
+          // mark messages as read
+          socket?.emit("markAsRead", {
+            from: friendId,
+          });
+        } catch (error) {
+          log(`failed to load messages: ${error.message}`, "err");
+        }
+      };
+
+      // ============================================================
+      //  DRAW ONE BUBBLE
+      // ============================================================
+      const addBubble = (message, isMine) => {
+        const time = new Date(message.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const ticks = isMine ? (message.readAt ? " ✓✓" : " ✓") : "";
+
+        $("messages").insertAdjacentHTML(
+          "beforeend",
+          `
+            <div class="msg ${isMine ? "mine" : "theirs"}">
+              ${escapeHtml(message.content)}
+              <div class="meta">
+                ${time}${ticks}
+              </div>
+            </div>
+          `,
+        );
+        $("messages").scrollTop = $("messages").scrollHeight;
+      };
+      // never put raw user text inside HTML (protection against XSS)
+      const escapeHtml = (text) =>
+        String(text).replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
+      // ============================================================
+      // SEND MESSAGE
+      // ============================================================
+      const sendMessage = () => {
+        const content = $("input").value.trim();
+        if (!content || !activeFriend || !socket) {
+          return;
+        }
+        socket.emit("sendMessage", {
+          to: activeFriend._id,
+          content,
+        });
+        $("input").value = "";
+      };
+      $("btnSend").onclick = sendMessage;
+
+      // Enter = send
+      $("input").onkeydown = (event) => {
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+      };
+
+      // ============================================================
+      // NEW APPLICATION ALERT UI
+      // ============================================================
+      const showAppAlert = (data = {}) => {
+        $("appAlertTitle").textContent = data.title || "New Application";
+        $("appAlertMessage").textContent =
+          data.message || "A new application has arrived.";
+        $("appAlertOverlay").classList.add("show");
+      };
+      $("appAlertClose").onclick = () => {
+        $("appAlertOverlay").classList.remove("show");
+      };
+      $("appAlertOverlay").onclick = (event) => {
+        if (event.target.id === "appAlertOverlay") {
+          $("appAlertOverlay").classList.remove("show");
+        }
+      };
+
+      // ============================================================
+      // READY
+      // ============================================================
+      log("Ready. Login with a confirmed account.", "muted");
+    </script>
+  </body>
+</html>

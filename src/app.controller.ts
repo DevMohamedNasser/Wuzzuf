@@ -12,6 +12,7 @@ import env from "./Config/config.service";
 import chalk from "chalk";
 import { authRouter, companyRouter, JobRouter, userRouter } from "./Modules";
 import cronJob from "./Utils/cron-job/cron";
+import initializeSocket from "./Utils/socket/socket.service";
 
 const bootstrap = async (): Promise<void> => {
   const app: Express = express();
@@ -36,11 +37,13 @@ const bootstrap = async (): Promise<void> => {
 
   app.use(globalErrorHandler);
 
-  app.listen(env.PORT, () => {
+  const httpServer = app.listen(env.PORT, () => {
     console.log(
       chalk.bgGreen(`Server has been run on http://127.0.0.1:${env.PORT}`),
     );
   });
+
+  initializeSocket(httpServer);
 };
 
 export default bootstrap;

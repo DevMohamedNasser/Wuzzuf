@@ -12,7 +12,8 @@ const application_enum_1 = require("../../Utils/enums/application.enum");
 const email_event_1 = __importDefault(require("../../Utils/events/email.event"));
 const user_model_1 = require("../../DB/Models/user.model");
 const mongoose_1 = __importDefault(require("mongoose"));
-// import mongoose from "mongoose";
+const cloudinary_multer_1 = __importDefault(require("../../Utils/multer/cloudinary.multer"));
+const application_socket_1 = require("../../Utils/socket/application.socket");
 class JobService {
     constructor() { }
     addJob = async (req, res) => {
@@ -238,6 +239,31 @@ class JobService {
                 jobs,
             },
         });
+    };
+    applyJob = async (req, res) => {
+        const { id } = req.params;
+        const file = req.file;
+        if (!file)
+            throw new error_response_1.NotFoundException("Upload ur CV");
+        const job = await job_model_1.jobModel.findById(id);
+        if (!job)
+            throw new error_response_1.NotFoundException("Job not found");
+        if (job.closed)
+            throw new error_response_1.BadRequestException("Job applications are completed");
+        const company = await company_model_1.companyModel.findById(job.companyId);
+        if (!company || company.bannedAt || company.deletedAt)
+            throw new error_response_1.NotFoundException("Company not found");
+        const isApplied = await application_model_1.applicationModel.findOne({ userId: req.user._id });
+        if (isApplied)
+            throw new error_response_1.ConflictException("U are already applied");
+        const { public_id, secure_url } = await cloudinary_multer_1.default.uploader.upload(file.path);
+        await application_model_1.applicationModel.create({
+            jobId: id,
+            userId: req.user._id,
+            userCV: { public_id, secure_url },
+        });
+        (0, application_socket_1.socketNotifyHRsApplication)(company, req.user, job);
+        return res.status(200).json({ message: "Submitted successfully" });
     };
 }
 exports.default = new JobService();

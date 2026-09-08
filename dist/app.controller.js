@@ -14,6 +14,7 @@ const config_service_1 = __importDefault(require("./Config/config.service"));
 const chalk_1 = __importDefault(require("chalk"));
 const Modules_1 = require("./Modules");
 const cron_1 = __importDefault(require("./Utils/cron-job/cron"));
+const socket_service_1 = __importDefault(require("./Utils/socket/socket.service"));
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, helmet_1.default)(), (0, cors_1.default)(cors_2.default), rateLimit_middleware_1.limiter);
@@ -31,8 +32,9 @@ const bootstrap = async () => {
         throw new error_response_1.NotFoundException("Not Found Handler");
     });
     app.use(error_response_1.globalErrorHandler);
-    app.listen(config_service_1.default.PORT, () => {
+    const httpServer = app.listen(config_service_1.default.PORT, () => {
         console.log(chalk_1.default.bgGreen(`Server has been run on http://127.0.0.1:${config_service_1.default.PORT}`));
     });
+    (0, socket_service_1.default)(httpServer);
 };
 exports.default = bootstrap;

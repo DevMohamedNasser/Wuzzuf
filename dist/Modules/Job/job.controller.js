@@ -42,6 +42,9 @@ const token_enum_1 = require("../../Utils/enums/token.enum");
 const validators = __importStar(require("./job.validation"));
 const job_service_1 = __importDefault(require("./job.service"));
 const validation_middleware_1 = require("../../Middlewares/validation.middleware");
+const local_multer_1 = require("../../Utils/multer/local.multer");
+const fileTypes_validation_multer_1 = require("../../Utils/multer/fileTypes.validation.multer");
+const user_enum_1 = require("../../Utils/enums/user.enum");
 const router = (0, express_1.Router)({ mergeParams: true });
 router.use((0, authentication_middleware_1.authentication)({ tokenType: token_enum_1.tokenTypeEnum.Access }));
 router.post("/", (0, validation_middleware_1.validation)(validators.addJobSchema), job_service_1.default.addJob);
@@ -51,4 +54,9 @@ router.get("/jobs", (0, validation_middleware_1.validation)(validators.JobsFilte
 // Take care from previous route 😇 /jobs and /:id sorting means a lot
 router.get("/:id", (0, validation_middleware_1.validation)(validators.jobApplicationsSchema), (0, validation_middleware_1.validation)(validators.jobIdSchema), job_service_1.default.jobApplications);
 router.patch("/applicant/:id", (0, validation_middleware_1.validation)(validators.ApplicationIdSchema), (0, validation_middleware_1.validation)(validators.appStatusSchema), job_service_1.default.acceptOrRejectApplicant);
+router.post("/apply/:id", (0, validation_middleware_1.validation)(validators.jobIdSchema), (0, authentication_middleware_1.authorization)({ accessRoles: [user_enum_1.RoleEnum.User] }), (0, local_multer_1.localFileMulter)({
+    customPath: "Application CVs",
+    validation: [...fileTypes_validation_multer_1.fileValidation.images, ...fileTypes_validation_multer_1.fileValidation.documents],
+    maxSizeMB: 5,
+}).single("attachment"), job_service_1.default.applyJob);
 exports.default = router;
