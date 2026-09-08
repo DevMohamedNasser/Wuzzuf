@@ -17,3 +17,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Auth/index"), exports);
 __exportStar(require("./User/index"), exports);
 __exportStar(require("./Company/index"), exports);
+__exportStar(require("./Job/index"), exports);

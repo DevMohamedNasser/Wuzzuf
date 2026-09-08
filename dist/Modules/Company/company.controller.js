@@ -44,6 +44,8 @@ const validation_middleware_1 = require("../../Middlewares/validation.middleware
 const validators = __importStar(require("./company.validation"));
 const local_multer_1 = require("../../Utils/multer/local.multer");
 const fileTypes_validation_multer_1 = require("../../Utils/multer/fileTypes.validation.multer");
+const jobValidators = __importStar(require("../Job/job.validation"));
+const job_service_1 = __importDefault(require("../Job/job.service"));
 const router = (0, express_1.Router)();
 router.use((0, authentication_middleware_1.authentication)({ tokenType: token_enum_1.tokenTypeEnum.Access }));
 router.post("/", (0, local_multer_1.localFileMulter)({
@@ -67,4 +69,17 @@ router.patch("/:id/coverPic", (0, validation_middleware_1.validation)(validators
 }).single("attachment"), company_service_1.default.uploadCoverPic);
 router.delete("/:id/logo", (0, validation_middleware_1.validation)(validators.companyIdSchema), company_service_1.default.deleteLogo);
 router.delete("/:id/coverPic", (0, validation_middleware_1.validation)(validators.companyIdSchema), company_service_1.default.deleteCoverPic);
+// const companyJobRouter = Router({ mergeParams: true });
+// companyJobRouter.get(
+//   "{/:jobId}",
+//   validation(jobValidators.companyJobsSchema),
+//   jobService.getCompanyJobs,
+// );
+// router.use("/:companyId/job", companyJobRouter);
+// merge params
+const companyJobRouter = (0, express_1.Router)({ mergeParams: true });
+// merge params child
+companyJobRouter.get("{/:jobId}", (0, validation_middleware_1.validation)(jobValidators.companyJobSchema), job_service_1.default.getCompanyJobs);
+// merge params parent
+router.use("/:companySrch/job", companyJobRouter);
 exports.default = router;

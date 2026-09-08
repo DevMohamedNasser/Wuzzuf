@@ -47,7 +47,7 @@ router.patch(
 
 router.post(
   "/refresh-token",
-  authentication({ tokenType: tokenTypeEnum.Access }),
+  authentication({ tokenType: tokenTypeEnum.Refresh }),
   authorization({ accessRoles: [RoleEnum.User, RoleEnum.Admin] }),
   authService.refreshToken,
 );

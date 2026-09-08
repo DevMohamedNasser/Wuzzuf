@@ -46,18 +46,18 @@ exports.jobSchema = new mongoose_1.Schema({
     },
     location: {
         type: Number,
-        enum: Object.values(job_enum_1.JobLocationEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(job_enum_1.JobLocationEnum).filter((value) => typeof value === "number"),
         required: true,
     },
     workingTime: {
         type: Number,
-        enum: Object.values(job_enum_1.JobWorkingTimeEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(job_enum_1.JobWorkingTimeEnum).filter((value) => typeof value === "number"),
         default: job_enum_1.JobWorkingTimeEnum.FullTime,
         required: true,
     },
     seniorityLevel: {
         type: Number,
-        enum: Object.values(job_enum_1.JobSeniorityLevelEnum).filter(value => typeof (value) === "number"),
+        enum: Object.values(job_enum_1.JobSeniorityLevelEnum).filter((value) => typeof value === "number"),
         required: true,
     },
     description: {
@@ -94,7 +94,21 @@ exports.jobSchema = new mongoose_1.Schema({
         ref: "Company",
         required: true,
     },
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        transform(doc, ret) {
+            if (typeof doc.location === "number")
+                ret.location = job_enum_1.JobLocationEnum[doc.location];
+            if (typeof doc.workingTime === "number")
+                ret.workingTime = job_enum_1.JobWorkingTimeEnum[doc.workingTime];
+            if (typeof doc.seniorityLevel === "number")
+                ret.seniorityLevel = job_enum_1.JobSeniorityLevelEnum[doc.seniorityLevel];
+        },
+    },
+    toObject: { virtuals: true },
+});
 // jobSchema.pre("findOneAndDelete", async function() {});
 exports.jobSchema.post("deleteOne", async function () {
     const filter = this.getFilter();
@@ -110,11 +124,10 @@ exports.jobSchema.pre("deleteMany", async function () {
         return;
     await application_model_1.applicationModel.deleteMany({ jobId: { $in: jobIds } });
 });
-exports.jobSchema.post("find", function (docs) {
-    docs.forEach((job) => {
-        job.location = job_enum_1.JobLocationEnum[job.location];
-        job.workingTime = job_enum_1.JobWorkingTimeEnum[job.workingTime];
-        job.seniorityLevel = job_enum_1.JobSeniorityLevelEnum[job.seniorityLevel];
-    });
+exports.jobSchema.index({ createdAt: -1 });
+exports.jobSchema.virtual("applications", {
+    ref: "Application",
+    localField: "_id",
+    foreignField: "jobId",
 });
 exports.jobModel = mongoose_1.default.models.Job || mongoose_1.default.model("Job", exports.jobSchema);

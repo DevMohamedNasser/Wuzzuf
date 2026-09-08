@@ -30,18 +30,24 @@ export const jobSchema = new Schema<IJob>(
     },
     location: {
       type: Number,
-      enum: Object.values(JobLocationEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(JobLocationEnum).filter(
+        (value) => typeof value === "number",
+      ),
       required: true,
     },
     workingTime: {
       type: Number,
-      enum: Object.values(JobWorkingTimeEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(JobWorkingTimeEnum).filter(
+        (value) => typeof value === "number",
+      ),
       default: JobWorkingTimeEnum.FullTime,
       required: true,
     },
     seniorityLevel: {
       type: Number,
-      enum: Object.values(JobSeniorityLevelEnum).filter(value => typeof(value) === "number"),
+      enum: Object.values(JobSeniorityLevelEnum).filter(
+        (value) => typeof value === "number",
+      ),
       required: true,
     },
     description: {
@@ -79,7 +85,22 @@ export const jobSchema = new Schema<IJob>(
       required: true,
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+
+      transform(doc, ret: Record<string, unknown>) {
+        if (typeof doc.location === "number")
+          ret.location = JobLocationEnum[doc.location];
+        if (typeof doc.workingTime === "number")
+          ret.workingTime = JobWorkingTimeEnum[doc.workingTime];
+        if (typeof doc.seniorityLevel === "number")
+          ret.seniorityLevel = JobSeniorityLevelEnum[doc.seniorityLevel];
+      },
+    },
+    toObject: { virtuals: true },
+  },
 );
 
 // jobSchema.pre("findOneAndDelete", async function() {});
@@ -101,12 +122,12 @@ jobSchema.pre("deleteMany", async function () {
   await applicationModel.deleteMany({ jobId: { $in: jobIds } });
 });
 
-jobSchema.post("find", function (docs: IJob[]) {
-  docs.forEach((job) => {
-    job.location = JobLocationEnum[job.location] as any;
-    job.workingTime = JobWorkingTimeEnum[job.workingTime] as any;
-    job.seniorityLevel = JobSeniorityLevelEnum[job.seniorityLevel] as any;
-  });
+jobSchema.index({ createdAt: -1 });
+
+jobSchema.virtual("applications", {
+  ref: "Application",
+  localField: "_id",
+  foreignField: "jobId",
 });
 
 export const jobModel: Model<IJob> =

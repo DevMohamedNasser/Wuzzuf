@@ -133,5 +133,4 @@ exports.companySchema.post("deleteOne", async function () {
         return;
     await job_model_1.jobModel.deleteMany({ companyId });
 });
-// companySchema.index({ HRs: 1 });
 exports.companyModel = mongoose_1.default.models.Company || mongoose_1.default.model("Company", exports.companySchema);

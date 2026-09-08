@@ -162,6 +162,9 @@ const userSchema = new mongoose_1.Schema({
             delete ret.OTP;
             delete ret.provider;
             delete ret.role;
+            if (typeof ret.mobileNumber === "string" &&
+                ret.mobileNumber.includes(":"))
+                ret.mobileNumber = (0, encryption_security_1.decrypt)(ret.mobileNumber);
             if (ret.gender !== undefined)
                 ret.gender = user_enum_1.GenderEnum[ret.gender];
             return ret;

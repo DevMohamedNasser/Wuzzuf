@@ -6,6 +6,8 @@ import { validation } from "../../Middlewares/validation.middleware";
 import * as validators from "./company.validation";
 import { localFileMulter } from "../../Utils/multer/local.multer";
 import { fileValidation } from "../../Utils/multer/fileTypes.validation.multer";
+import * as jobValidators from "../Job/job.validation";
+import jobService from "../Job/job.service";
 
 const router = Router();
 router.use(authentication({ tokenType: tokenTypeEnum.Access }));
@@ -79,5 +81,18 @@ router.delete(
   validation(validators.companyIdSchema),
   companyService.deleteCoverPic,
 );
+
+// merge params
+const companyJobRouter = Router({ mergeParams: true });
+
+// merge params child
+companyJobRouter.get(
+  "{/:jobId}",
+  validation(jobValidators.companyJobSchema),
+  jobService.getCompanyJobs,
+);
+
+// merge params parent
+router.use("/:companySrch/job", companyJobRouter);
 
 export default router;

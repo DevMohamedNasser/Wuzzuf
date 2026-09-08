@@ -176,6 +176,13 @@ const userSchema = new Schema<IUser>(
         delete ret.OTP;
         delete ret.provider;
         delete ret.role;
+
+        if (
+          typeof ret.mobileNumber === "string" &&
+          ret.mobileNumber.includes(":")
+        )
+          ret.mobileNumber = decrypt(ret.mobileNumber);
+
         if (ret.gender !== undefined)
           ret.gender = GenderEnum[ret.gender as GenderEnum];
         return ret;
