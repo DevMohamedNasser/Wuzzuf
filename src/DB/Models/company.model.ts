@@ -2,6 +2,7 @@ import mongoose, { HydratedDocument, Model, Schema, Types } from "mongoose";
 import { jobModel } from "./job.model";
 
 export interface ICompany {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   description?: string;

@@ -13,6 +13,9 @@ import chalk from "chalk";
 import { authRouter, companyRouter, JobRouter, userRouter } from "./Modules";
 import cronJob from "./Utils/cron-job/cron";
 import initializeSocket from "./Utils/socket/socket.service";
+import { createHandler } from "graphql-http/lib/use/express";
+import { schema } from "./Utils/graphql/graphql.schema";
+import { buildContext } from "./Utils/graphql/graphql.context";
 
 const bootstrap = async (): Promise<void> => {
   const app: Express = express();
@@ -21,6 +24,18 @@ const bootstrap = async (): Promise<void> => {
   app.use(express.json());
   await connectDB();
   await cronJob();
+
+  app.all(
+    "/graphql",
+    createHandler({
+      schema,
+      context: async (req) => {
+        const raw = req.raw as Request;
+        const context = await buildContext(raw.headers.authorization);
+        return context as unknown as Record<PropertyKey, unknown>;
+      },
+    }),
+  );
 
   app.get("/", (req: Request, res: Response) => {
     return res.status(200).json({ message: "welcome ya handasaaa" });
