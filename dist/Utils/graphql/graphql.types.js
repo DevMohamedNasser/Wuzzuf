@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.companyPaginationType = exports.companyType = exports.userPaginationType = exports.userType = void 0;
+exports.approveCompanyType = exports.banUnbanCompanyType = exports.banUnbanUserType = exports.companyPaginationType = exports.companyType = exports.userPaginationType = exports.userType = void 0;
 const graphql_1 = require("graphql");
 const user_model_1 = require("../../DB/Models/user.model");
 const user_enum_1 = require("../enums/user.enum");
@@ -117,7 +117,7 @@ exports.companyType = new graphql_1.GraphQLObjectType({
         },
         deletedAt: {
             type: graphql_1.GraphQLString,
-            resolve: (parent) => parent.bannedAt ? parent.bannedAt.toISOString() : null,
+            resolve: (parent) => parent.deletedAt ? parent.deletedAt.toISOString() : null,
         },
         isAdminApproved: { type: graphql_1.GraphQLBoolean },
     },
@@ -130,5 +130,27 @@ exports.companyPaginationType = new graphql_1.GraphQLObjectType({
         pages: { type: graphql_1.GraphQLInt },
         page: { type: graphql_1.GraphQLInt },
         limit: { type: graphql_1.GraphQLInt },
+    },
+});
+/* _______________________________ Mutation _______________________________ */
+exports.banUnbanUserType = new graphql_1.GraphQLObjectType({
+    name: "BannedUserResult",
+    fields: {
+        banned: { type: graphql_1.GraphQLBoolean },
+        user: { type: exports.userType },
+    },
+});
+exports.banUnbanCompanyType = new graphql_1.GraphQLObjectType({
+    name: "BannedCompanyResult",
+    fields: {
+        banned: { type: graphql_1.GraphQLBoolean },
+        company: { type: exports.companyType },
+    },
+});
+exports.approveCompanyType = new graphql_1.GraphQLObjectType({
+    name: "ApproveCompany",
+    fields: {
+        approved: { type: graphql_1.GraphQLBoolean },
+        company: { type: exports.companyType },
     },
 });

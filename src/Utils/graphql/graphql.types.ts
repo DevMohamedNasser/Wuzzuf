@@ -135,7 +135,7 @@ export const companyType = new GraphQLObjectType({
     deletedAt: {
       type: GraphQLString,
       resolve: (parent) =>
-        parent.bannedAt ? parent.bannedAt.toISOString() : null,
+        parent.deletedAt ? parent.deletedAt.toISOString() : null,
     },
     isAdminApproved: { type: GraphQLBoolean },
   },
@@ -149,5 +149,30 @@ export const companyPaginationType = new GraphQLObjectType({
     pages: { type: GraphQLInt },
     page: { type: GraphQLInt },
     limit: { type: GraphQLInt },
+  },
+});
+
+/* _______________________________ Mutation _______________________________ */
+export const banUnbanUserType = new GraphQLObjectType({
+  name: "BannedUserResult",
+  fields: {
+    banned: { type: GraphQLBoolean },
+    user: { type: userType },
+  },
+});
+
+export const banUnbanCompanyType = new GraphQLObjectType({
+  name: "BannedCompanyResult",
+  fields: {
+    banned: { type: GraphQLBoolean },
+    company: { type: companyType },
+  },
+});
+
+export const approveCompanyType = new GraphQLObjectType({
+  name: "ApproveCompany",
+  fields: {
+    approved: { type: GraphQLBoolean },
+    company: { type: companyType },
   },
 });
